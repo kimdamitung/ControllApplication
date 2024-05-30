@@ -15,7 +15,7 @@ class _ScanIpState extends State<ScanIp> {
     final response = await http.get(Uri.parse('$url?cmd=CHECK'));
     if (response.statusCode == 200 &&
         response.body == 'CHECK CONNECT SUCCESS') {
-      Navigator.pushReplacementNamed(context, "/homepage");
+      Navigator.pushReplacementNamed(context, "/homepage", arguments: url);
     } else {
       showDialog(
         context: context,

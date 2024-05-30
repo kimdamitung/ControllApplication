@@ -65,6 +65,8 @@ flutter:
     - assets/image/apple.png
     - assets/image/facebook.png
     - assets/image/background_home.png
+    - assets/image/lamp.png
+    - assets/image/fan.png
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

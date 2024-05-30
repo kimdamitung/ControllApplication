@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter/cupertino.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -8,8 +10,39 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  String? IP_Devices;
+  Future<void> _handle_SendStateLED(bool state, String cmd, String url) async {
+    String command = state ? '${cmd}_ON' : '${cmd}_OFF';
+    try {
+      final response = await http.get(Uri.parse('${url}?cmd=$command'));
+      if (response.statusCode == 200) {
+        print('HTTP request sent successfully.');
+      } else {
+        print('Failed to send HTTP request.');
+      }
+    } catch (e) {
+      print('Error sending HTTP request: $e');
+    }
+  }
+
+  bool lampState = false;
+  bool speed_1_State = false;
+  bool speed_2_State = false;
+  bool speed_3_State = false;
+  void _handle_UpdateStateSpeed(bool speed1, bool speed2, bool speed3) {
+    setState(() {
+      speed_1_State = speed1;
+      speed_2_State = speed2;
+      speed_3_State = speed3;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is String) {
+      IP_Devices = args;
+    }
     // TODO: implement build
     return Scaffold(
       backgroundColor: Colors.indigo.shade50,
@@ -24,7 +57,9 @@ class _HomePageState extends State<HomePage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.pushReplacementNamed(context, "/openpage");
+                    },
                     icon: const Icon(
                       Icons.arrow_back,
                     ),
@@ -200,22 +235,25 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                   ),
                                   const SizedBox(height: 5),
-                                  const Text(
-                                    'OFF',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.green,
-                                    ),
+                                  Text(
+                                    lampState ? 'ON' : 'OFF',
+                                    style: lampState
+                                        ? TextStyle(
+                                            fontSize: 16, color: Colors.green)
+                                        : TextStyle(
+                                            fontSize: 16, color: Colors.red),
                                   ),
                                 ],
                               ),
                             ],
                           ),
                           Switch(
-                            value:
-                                false, // Set this to the lamp's current state
+                            value: lampState,
                             onChanged: (value) {
-                              // Handle lamp switch state change
+                              setState(() {
+                                lampState = value;
+                              });
+                              _handle_SendStateLED(value, 'LED_0', IP_Devices!);
                             },
                           ),
                         ],
@@ -268,22 +306,39 @@ class _HomePageState extends State<HomePage> {
                           Row(
                             children: [
                               Switch(
-                                value:
-                                    false, // Set this to the fan's current state
+                                value: speed_1_State,
                                 onChanged: (value) {
-                                  // Handle fan switch state change
+                                  if (value) {
+                                    _handle_UpdateStateSpeed(
+                                        true, false, false);
+                                  } else {
+                                    _handle_UpdateStateSpeed(
+                                        false, false, false);
+                                  }
                                 },
                               ),
                               Switch(
-                                value: false,
+                                value: speed_2_State,
                                 onChanged: (value) {
-                                  // Handle fan switch state change
+                                  if (value) {
+                                    _handle_UpdateStateSpeed(
+                                        false, true, false);
+                                  } else {
+                                    _handle_UpdateStateSpeed(
+                                        false, false, false);
+                                  }
                                 },
                               ),
                               Switch(
-                                value: false,
+                                value: speed_3_State,
                                 onChanged: (value) {
-                                  // Handle fan switch state change
+                                  if (value) {
+                                    _handle_UpdateStateSpeed(
+                                        false, false, true);
+                                  } else {
+                                    _handle_UpdateStateSpeed(
+                                        false, false, false);
+                                  }
                                 },
                               ),
                             ],

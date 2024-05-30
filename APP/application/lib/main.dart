@@ -25,7 +25,7 @@ class MainWindow extends StatelessWidget {
         "/scanip": (context) => const ScanIp(),
         "/homepage": (context) => const HomePage(),
       },
-      initialRoute: "/homepage",
+      initialRoute: "/openpage",
     );
   }
 }

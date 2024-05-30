@@ -68,12 +68,39 @@ void setup(){
     display.setCursor(10, 80);
     display.println("Password");
     _handle_UpdateDisplay();
-    xTaskCreatePinnedToCore(_task_RunServer, "Task Server", 10000, NULL, 1, NULL, 0);
-    xTaskCreatePinnedToCore(_task_RunDisplay, "Task Display", 10000, NULL, 1, NULL, 0);
+    // xTaskCreatePinnedToCore(_task_RunServer, "Task Server", 10000, NULL, 1, NULL, 0);
+    // xTaskCreatePinnedToCore(_task_RunDisplay, "Task Display", 10000, NULL, 1, NULL, 0);
 }
 
 void loop(){
 	/* code */
+	server.handleClient();
+	char keys = _handle_ScanKeyBoard();
+	if(keys != '\0'){
+		Serial.print(keys);
+		if(keys == 'N'){
+			cursorPosition = (cursorPosition + 1) % 3;
+		}else if(keys == 'E' && cursorPosition == 2){
+			_handle_SuccessConnect(wifiSsid, wifiPass);
+		}else if(keys == 'X'){
+			if(cursorPosition == 0 && ssidLength > 0)
+				wifiSsid[--ssidLength] = '\0';
+			else if(cursorPosition == 1 && passLength > 0)
+				wifiPass[--passLength] = '\0';
+		}else if(keys == 'R'){
+			ESP.restart();
+		}else{
+			if(cursorPosition == 0 && ssidLength < MAX_LENGTH){
+				wifiSsid[ssidLength++] = keys;
+				wifiSsid[ssidLength] = '\0';
+			}else if(cursorPosition == 1 && passLength < MAX_LENGTH){
+				wifiPass[passLength++] = keys;
+				wifiPass[passLength] = '\0';
+			}
+		}
+		_handle_UpdateDisplay();
+		delay(200);
+	}
 }
 
 void _handle_ConnectWifi(const char *ssid, const char *pass){
@@ -117,14 +144,17 @@ void _handle_ShowQRCode(){
 void _handle_RootServer(){
 	if(server.hasArg("cmd")){
 		String cmd = server.arg("cmd");
+		Serial.println("Received command: " + cmd);
 		if(cmd == "CHECK"){
 			server.send(200, "text/plain", "CHECK CONNECT SUCCESS");
 		}else if(cmd == "LED_0_OFF"){
 			digitalWrite(GPIO_OUT_LED, LOW); 
             server.send(200, "text/plain", "LED is OFF");
+            Serial.println("LED turned OFF");
 		}else if(cmd == "LED_0_ON"){
 			digitalWrite(GPIO_OUT_LED, HIGH); 
             server.send(200, "text/plain", "LED is ON");
+            Serial.println("LED turned ON");
 		}else{
 			server.send(400, "text/plain", "Invalid command");
 		}
